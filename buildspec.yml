@@ -2,48 +2,31 @@ version: 0.2
 
 phases:
   install:
-    on-failure: ABORT
     runtime-versions:
       nodejs: 22
     commands:
-      - echo "Installing pnpm..."
-      - npm install -g pnpm@latest-10
-
       - echo "Installing dependencies..."
-      - pnpm install --frozen-lockfile
-
-      - echo "Parsing database secret..."
-      - DB_USER=$(echo $DB_SECRET | jq -r '.username')
-      - DB_PASSWORD=$(echo $DB_SECRET | jq -r '.password')
-      - DB_HOST=$(echo $DB_SECRET | jq -r '.host')
-      - DB_PORT=$(echo $DB_SECRET | jq -r '.port')
-      - export DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/postgres?schema=public"
+      - npm install -g corepack@latest
+      - corepack enable
+      - corepack use pnpm@latest-10
+      - pnpm install
 
   pre_build:
-    on-failure: ABORT
     commands:
       - echo "Generating Prisma client..."
       - pnpm prisma generate
 
   build:
-    on-failure: ABORT
     commands:
-      - echo "Starting build..."
+      - echo 'Building project...'
       - pnpm run build
-
-  post_build:
-    on-failure: ABORT
-    commands:
-      - echo "Running Prisma migration..."
-      - pnpm prisma migrate deploy
 
 artifacts:
   files:
     - 'dist/**/*'
-    - 'prisma/**/*'
     - 'package.json'
     - 'pnpm-lock.yaml'
     - '.nvmrc'
-    - 'scripts/**/*'
-    - 'appspec.yml'
-    - 'ecosystem.config.js'
+    - 'prisma/**/*'
+    - '.platform/**/*'
+    - 'Procfile'
